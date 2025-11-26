@@ -1,50 +1,71 @@
-// jest.config.js - Root Jest configuration file
+// jest.config.js - Unified Jest configuration for both client & server
 
 module.exports = {
-  // Base configuration for all tests
   projects: [
-    // Server-side tests configuration
+    // -------------------------
+    // SERVER CONFIG
+    // -------------------------
     {
-      displayName: 'server',
-      testEnvironment: 'node',
-      testMatch: ['<rootDir>/server/tests/**/*.test.js'],
-      moduleFileExtensions: ['js', 'json', 'node'],
-      setupFilesAfterEnv: ['<rootDir>/server/tests/setup.js'],
-      coverageDirectory: '<rootDir>/coverage/server',
+      displayName: "server",
+      testEnvironment: "node",   // MUST be node, not jsdom
+      testMatch: ["<rootDir>/server/tests/**/*.test.js"],
+      moduleFileExtensions: ["js", "json", "node"],
+      setupFilesAfterEnv: ["<rootDir>/server/tests/setup.js"],
+
+      // Prevent Jest from trying to transform MongoDB and other ESM deps
+      transform: {}, // disable transforms (Node 18+ handles ESM)
+      transformIgnorePatterns: ["/node_modules/"],
+
+      coverageDirectory: "<rootDir>/coverage/server",
       collectCoverageFrom: [
-        'server/src/**/*.js',
-        '!server/src/config/**',
-        '!**/node_modules/**',
+        "server/src/**/*.js",
+        "!server/src/config/**",
+        "!**/node_modules/**",
       ],
     },
-    
-    // Client-side tests configuration
+
+    // -------------------------
+    // CLIENT CONFIG
+    // -------------------------
     {
-      displayName: 'client',
-      testEnvironment: 'jsdom',
-      testMatch: ['<rootDir>/client/src/**/*.test.{js,jsx}'],
-      moduleFileExtensions: ['js', 'jsx', 'json'],
-      moduleNameMapper: {
-        '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-        '\\.(jpg|jpeg|png|gif|webp|svg)$': '<rootDir>/client/src/tests/__mocks__/fileMock.js',
-      },
-      setupFilesAfterEnv: ['<rootDir>/client/src/tests/setup.js'],
+      displayName: "client",
+      testEnvironment: "jsdom",
+      testMatch: ["<rootDir>/client/src/**/*.test.{js,jsx}"],
+      moduleFileExtensions: ["js", "jsx", "json"],
+
+      setupFilesAfterEnv: ["<rootDir>/client/src/tests/setup.js"],
+
+      // Use Babel for JSX + ESNext
       transform: {
-        '^.+\\.(js|jsx)$': 'babel-jest',
+        "^.+\\.(js|jsx)$": [
+          "babel-jest",
+          { presets: ["@babel/preset-env", "@babel/preset-react"] }
+        ],
       },
-      coverageDirectory: '<rootDir>/coverage/client',
+
+      moduleNameMapper: {
+        "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+        "\\.(jpg|jpeg|png|gif|webp|svg)$":
+          "<rootDir>/client/src/tests/__mocks__/fileMock.js",
+      },
+
+      coverageDirectory: "<rootDir>/coverage/client",
       collectCoverageFrom: [
-        'client/src/**/*.{js,jsx}',
-        '!client/src/index.js',
-        '!**/node_modules/**',
+        "client/src/**/*.{js,jsx}",
+        "!client/src/index.js",
+        "!**/node_modules/**",
       ],
     },
   ],
-  
-  // Global configuration
+
+  // -------------------------
+  // GLOBAL CONFIG
+  // -------------------------
   verbose: true,
   collectCoverage: true,
-  coverageReporters: ['text', 'lcov', 'clover', 'html'],
+  coverageReporters: ["text", "lcov", "clover", "html"],
+  testTimeout: 10000,
+  
   coverageThreshold: {
     global: {
       statements: 70,
@@ -53,5 +74,4 @@ module.exports = {
       lines: 70,
     },
   },
-  testTimeout: 10000,
-}; 
+};
